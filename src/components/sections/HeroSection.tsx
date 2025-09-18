@@ -4,21 +4,21 @@ export const HeroSection = () => {
   return (
     <section className="relative sm:px-6 md:px-10 w-full max-w-7xl mt-12 mr-auto mb-16 ml-auto pr-4 pl-4">
       <h1 className="max-w-4xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl leading-[1.05] font-medium text-black tracking-tighter font-serif">
-        We place world‑class tech talent
+        Indonesia&apos;s Leading Headhunter &
         <span className="inline-block align-middle sm:h-12 sm:w-20 md:h-16 md:w-28 w-14 h-10 relative mx-2 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.12)] overflow-hidden">
           <Image
             src="https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=400&auto=format&fit=crop"
-            alt="Talent"
+            alt="Professional talent"
             fill
             sizes="(max-width: 768px) 56px, (max-width: 1024px) 112px, 112px"
             className="object-cover"
             priority
           />
         </span>
-        into teams that ship—fast.
+        Talent Acquisition Partner
       </h1>
       <p className="sm:text-2xl text-base text-black max-w-3xl mt-4">
-        Senior Engineers, Product Designers, Data &amp; AI, and Fractional Leaders. Vetted network, precision matching, zero guesswork.
+        Executive Search, Recruitment Agency Services & HR Consulting. Serving Jakarta, Surabaya, Bandung. Vetted professionals, precision matching, guaranteed results.
       </p>
 
       <div className="flex flex-wrap gap-2.5 mt-8">

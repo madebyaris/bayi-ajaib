@@ -235,7 +235,64 @@
 - Legal compliance updates
 - Future of work
 
-#### 8.2 SEO Content Strategy
+#### 8.2 Fake Data Structure
+
+**Team Members (10+ profiles)**
+- Name, role, experience level
+- Professional headshots (placeholder images)
+- Bio and specializations
+- Education and certifications
+- Contact information
+
+**Client Testimonials (15+ testimonials)**
+- Client name and company
+- Job title and industry
+- Testimonial content
+- Company logos (placeholder)
+- Project details and outcomes
+
+**Job Listings (50+ positions)**
+- Job title and level (Junior, Mid, Senior, Executive)
+- Company name and industry
+- Location (Jakarta, Surabaya, Bandung, Remote)
+- Salary range and benefits
+- Job description and requirements
+- Application deadline
+- Skills and technologies
+
+**Case Studies (10+ success stories)**
+- Client company profile
+- Challenge and requirements
+- Solution and process
+- Results and metrics
+- Testimonials and feedback
+- Timeline and team involved
+
+**Company Statistics**
+- Years in business: 8+ years
+- Total placements: 2,500+ professionals
+- Client companies: 150+ organizations
+- Success rate: 92% placement success
+- Average time to hire: 21 days
+- Industries served: 12+ sectors
+- Team size: 25+ consultants
+
+**Office Locations**
+- Jakarta (Head Office): Sudirman Central Business District
+- Surabaya: Tunjungan Plaza area
+- Bandung: Dago/IT corridor
+- Remote: Nationwide coverage
+- International: Singapore partnership
+
+**Industry Expertise**
+- Technology & IT (35%)
+- Finance & Banking (20%)
+- Healthcare & Pharmaceuticals (15%)
+- Manufacturing & Engineering (12%)
+- Retail & Consumer Goods (10%)
+- Other sectors (8%)
+
+#### 8.3 SEO Content Strategy
 
 **Primary Keywords**
 - "recruitment agency [location]"
