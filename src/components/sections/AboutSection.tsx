@@ -9,7 +9,7 @@ export const AboutSection = () => {
             Operators turned talent partners
           </h3>
           <p className="text-neutral-600 mt-4">
-            We've shipped products at venture-backed startups and public companies. Now we help founders build teams that move with the same velocity—without compromising on quality.
+            We&apos;ve shipped products at venture-backed startups and public companies. Now we help founders build teams that move with the same velocity—without compromising on quality.
           </p>
           <ul className="mt-6 space-y-3 text-sm text-neutral-800">
             <li className="flex items-start gap-3">

@@ -1,10 +1,10 @@
 // Application constants
 export const APP_NAME = 'Recruitment Company';
 export const APP_DESCRIPTION = 'Professional recruitment agency specializing in executive search and talent acquisition';
-export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+export const APP_URL = process.env['NEXT_PUBLIC_APP_URL'] || 'http://localhost:3000';
 
 // API constants
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+export const API_BASE_URL = process.env['NEXT_PUBLIC_API_URL'] || '/api';
 export const API_TIMEOUT = 30000; // 30 seconds
 
 // Pagination constants
