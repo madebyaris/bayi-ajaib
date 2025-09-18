@@ -13,7 +13,7 @@ export const Header = ({ className = "" }: HeaderProps) => {
   const closeMenu = useCallback(() => setMobileOpen(false), []);
 
   return (
-    <header className={`sm:px-6 md:px-10 w-full max-w-7xl mt-10 mr-auto ml-auto pr-4 pl-4 ${className}`}>
+    <header className={`sm:px-6 md:px-10 w-full max-w-7xl mt-3 mr-auto ml-auto pr-4 pl-4 ${className}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
