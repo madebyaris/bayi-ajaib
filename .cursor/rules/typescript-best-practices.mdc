@@ -1,0 +1,629 @@
+---
+globs: *.ts,*.tsx
+description: TypeScript best practices for type safety and 10X development
+---
+
+# TypeScript Best Practices for 10X Development
+
+## Type Safety Principles
+
+### 1. Strict Type Configuration
+- Enable strict mode in tsconfig.json
+- Use `noImplicitAny: true`
+- Enable `strictNullChecks`
+- Use `noImplicitReturns: true`
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true
+  }
+}
+```
+
+### 2. Interface Design
+- Use interfaces for object shapes
+- Prefer interfaces over types for extensibility
+- Use descriptive names
+- Group related properties
+
+```tsx
+// ✅ Correct - Well-designed interface
+interface User {
+  id: string;
+  email: string;
+  profile: {
+    firstName: string;
+    lastName: string;
+    avatar?: string;
+  };
+  preferences: UserPreferences;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface UserPreferences {
+  theme: 'light' | 'dark' | 'system';
+  notifications: boolean;
+  language: string;
+}
+
+// ❌ Incorrect - Poor interface design
+interface User {
+  id: any;
+  email: any;
+  profile: any;
+  preferences: any;
+  createdAt: any;
+  updatedAt: any;
+}
+```
+
+### 3. Type Guards and Narrowing
+- Use type guards for runtime type checking
+- Implement proper type narrowing
+- Use discriminated unions
+- Handle unknown types safely
+
+```tsx
+// ✅ Correct - Type guards
+function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+function isUser(value: unknown): value is User {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    'email' in value
+  );
+}
+
+// Usage
+function processValue(value: unknown) {
+  if (isString(value)) {
+    // TypeScript knows value is string here
+    console.log(value.toUpperCase());
+  }
+}
+```
+
+## Component Type Safety
+
+### 1. Props Interface Design
+- Define clear prop interfaces
+- Use optional props appropriately
+- Implement default props
+- Use generic types for reusable components
+
+```tsx
+// ✅ Correct - Well-typed component props
+interface ButtonProps {
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary' | 'outline';
+  size?: 'sm' | 'md' | 'lg';
+  disabled?: boolean;
+  loading?: boolean;
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  className?: string;
+}
+
+const Button: React.FC<ButtonProps> = ({
+  children,
+  variant = 'primary',
+  size = 'md',
+  disabled = false,
+  loading = false,
+  onClick,
+  className,
+}) => {
+  // Component implementation
+};
+
+// ❌ Incorrect - Poorly typed props
+const Button = ({ children, variant, size, disabled, onClick, className }: any) => {
+  // Component implementation
+};
+```
+
+### 2. Event Handler Types
+- Use proper event types
+- Implement generic event handlers
+- Handle form events correctly
+- Use proper ref types
+
+```tsx
+// ✅ Correct - Proper event types
+const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  event.preventDefault();
+  // Handle form submission
+};
+
+const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  event.stopPropagation();
+  // Handle click
+};
+
+const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const value = event.target.value;
+  // Handle input change
+};
+
+// Ref types
+const inputRef = useRef<HTMLInputElement>(null);
+const divRef = useRef<HTMLDivElement>(null);
+```
+
+### 3. State Management Types
+- Type state properly
+- Use discriminated unions for complex state
+- Implement proper state updates
+- Handle async state correctly
+
+```tsx
+// ✅ Correct - Typed state management
+interface UserState {
+  user: User | null;
+  loading: boolean;
+  error: string | null;
+}
+
+type UserAction =
+  | { type: 'FETCH_START' }
+  | { type: 'FETCH_SUCCESS'; payload: User }
+  | { type: 'FETCH_ERROR'; payload: string }
+  | { type: 'CLEAR_ERROR' };
+
+const userReducer = (state: UserState, action: UserAction): UserState => {
+  switch (action.type) {
+    case 'FETCH_START':
+      return { ...state, loading: true, error: null };
+    case 'FETCH_SUCCESS':
+      return { user: action.payload, loading: false, error: null };
+    case 'FETCH_ERROR':
+      return { ...state, loading: false, error: action.payload };
+    case 'CLEAR_ERROR':
+      return { ...state, error: null };
+    default:
+      return state;
+  }
+};
+```
+
+## API and Data Types
+
+### 1. API Response Types
+- Define response interfaces
+- Handle error responses
+- Use generic types for reusable APIs
+- Implement proper error handling
+
+```tsx
+// ✅ Correct - API response types
+interface ApiResponse<T> {
+  data: T;
+  message: string;
+  success: boolean;
+}
+
+interface ApiError {
+  message: string;
+  code: string;
+  details?: Record<string, unknown>;
+}
+
+interface UserListResponse {
+  users: User[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+// API function with proper typing
+async function fetchUsers(
+  page: number = 1,
+  limit: number = 10
+): Promise<ApiResponse<UserListResponse>> {
+  const response = await fetch(`/api/users?page=${page}&limit=${limit}`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch users: ${response.statusText}`);
+  }
+  
+  return response.json();
+}
+```
+
+### 2. Form Data Types
+- Use Zod for runtime validation
+- Define form schemas
+- Handle form errors properly
+- Use proper form types
+
+```tsx
+// ✅ Correct - Form validation with Zod
+import { z } from 'zod';
+
+const contactFormSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Invalid email address'),
+  company: z.string().optional(),
+  message: z.string().min(10, 'Message must be at least 10 characters'),
+  service: z.enum(['executive-search', 'rpo', 'mass-hiring', 'eor']),
+});
+
+type ContactFormData = z.infer<typeof contactFormSchema>;
+
+const ContactForm = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ContactFormData>({
+    resolver: zodResolver(contactFormSchema),
+  });
+
+  const onSubmit = async (data: ContactFormData) => {
+    // Handle form submission
+  };
+};
+```
+
+## Error Handling
+
+### 1. Error Types
+- Define custom error types
+- Use error boundaries
+- Implement proper error logging
+- Handle different error scenarios
+
+```tsx
+// ✅ Correct - Error handling
+class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public code: string
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+class ValidationError extends Error {
+  constructor(
+    message: string,
+    public field: string,
+    public value: unknown
+  ) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
+// Error boundary component
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class ErrorBoundary extends React.Component<
+  React.PropsWithChildren<{}>,
+  ErrorBoundaryState
+> {
+  constructor(props: React.PropsWithChildren<{}>) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <ErrorFallback error={this.state.error} />;
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+### 2. Async Error Handling
+- Use try-catch for async operations
+- Handle promise rejections
+- Implement retry logic
+- Use proper error types
+
+```tsx
+// ✅ Correct - Async error handling
+async function fetchUserWithRetry(
+  userId: string,
+  maxRetries: number = 3
+): Promise<User> {
+  let lastError: Error;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(`/api/users/${userId}`);
+      
+      if (!response.ok) {
+        throw new ApiError(
+          `Failed to fetch user: ${response.statusText}`,
+          response.status,
+          'FETCH_USER_ERROR'
+        );
+      }
+      
+      const data: ApiResponse<User> = await response.json();
+      return data.data;
+    } catch (error) {
+      lastError = error as Error;
+      
+      if (attempt === maxRetries) {
+        throw lastError;
+      }
+      
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+    }
+  }
+  
+  throw lastError!;
+}
+```
+
+## Performance and Optimization
+
+### 1. Generic Types
+- Use generics for reusable components
+- Implement proper generic constraints
+- Use conditional types when needed
+- Avoid any types
+
+```tsx
+// ✅ Correct - Generic component
+interface TableProps<T> {
+  data: T[];
+  columns: Column<T>[];
+  onRowClick?: (row: T) => void;
+  loading?: boolean;
+}
+
+interface Column<T> {
+  key: keyof T;
+  title: string;
+  render?: (value: T[keyof T], row: T) => React.ReactNode;
+}
+
+function Table<T extends Record<string, unknown>>({
+  data,
+  columns,
+  onRowClick,
+  loading = false,
+}: TableProps<T>) {
+  if (loading) {
+    return <TableSkeleton />;
+  }
+
+  return (
+    <table>
+      <thead>
+        <tr>
+          {columns.map(column => (
+            <th key={String(column.key)}>{column.title}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((row, index) => (
+          <tr key={index} onClick={() => onRowClick?.(row)}>
+            {columns.map(column => (
+              <td key={String(column.key)}>
+                {column.render
+                  ? column.render(row[column.key], row)
+                  : String(row[column.key])
+                }
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+```
+
+### 2. Utility Types
+- Use built-in utility types
+- Create custom utility types
+- Use mapped types
+- Implement proper type transformations
+
+```tsx
+// ✅ Correct - Utility types
+type Partial<T> = {
+  [P in keyof T]?: T[P];
+};
+
+type Required<T> = {
+  [P in keyof T]-?: T[P];
+};
+
+type Pick<T, K extends keyof T> = {
+  [P in K]: T[P];
+};
+
+type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+
+// Custom utility types
+type NonNullable<T> = T extends null | undefined ? never : T;
+
+type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
+
+// Usage
+type UserUpdate = Partial<User>;
+type UserRequired = Required<Pick<User, 'id' | 'email'>>;
+type UserWithoutId = Omit<User, 'id'>;
+```
+
+## Testing Types
+
+### 1. Test Type Safety
+- Type test functions properly
+- Use proper mock types
+- Implement type-safe test utilities
+- Handle async test types
+
+```tsx
+// ✅ Correct - Typed tests
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { User } from '@/types/user';
+
+const mockUser: User = {
+  id: '1',
+  email: 'test@example.com',
+  profile: {
+    firstName: 'John',
+    lastName: 'Doe',
+  },
+  preferences: {
+    theme: 'light',
+    notifications: true,
+    language: 'en',
+  },
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+describe('UserProfile', () => {
+  it('should render user information correctly', () => {
+    render(<UserProfile user={mockUser} />);
+    
+    expect(screen.getByText('John Doe')).toBeInTheDocument();
+    expect(screen.getByText('test@example.com')).toBeInTheDocument();
+  });
+
+  it('should handle user update', async () => {
+    const onUpdate = jest.fn();
+    render(<UserProfile user={mockUser} onUpdate={onUpdate} />);
+    
+    fireEvent.click(screen.getByText('Edit'));
+    fireEvent.change(screen.getByLabelText('First Name'), {
+      target: { value: 'Jane' },
+    });
+    fireEvent.click(screen.getByText('Save'));
+    
+    await waitFor(() => {
+      expect(onUpdate).toHaveBeenCalledWith({
+        ...mockUser,
+        profile: {
+          ...mockUser.profile,
+          firstName: 'Jane',
+        },
+      });
+    });
+  });
+});
+```
+
+## Code Organization
+
+### 1. File Structure
+- Use barrel exports
+- Organize types by domain
+- Separate concerns properly
+- Use index files for clean imports
+
+```tsx
+// types/index.ts
+export type { User, UserPreferences } from './user';
+export type { ApiResponse, ApiError } from './api';
+export type { ContactFormData } from './forms';
+
+// types/user.ts
+export interface User {
+  id: string;
+  email: string;
+  profile: UserProfile;
+  preferences: UserPreferences;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface UserProfile {
+  firstName: string;
+  lastName: string;
+  avatar?: string;
+}
+
+export interface UserPreferences {
+  theme: 'light' | 'dark' | 'system';
+  notifications: boolean;
+  language: string;
+}
+```
+
+### 2. Type Documentation
+- Document complex types
+- Use JSDoc comments
+- Provide usage examples
+- Explain type constraints
+
+```tsx
+/**
+ * Represents a user in the system
+ * @interface User
+ */
+interface User {
+  /** Unique identifier for the user */
+  id: string;
+  
+  /** User's email address (must be unique) */
+  email: string;
+  
+  /** User's profile information */
+  profile: UserProfile;
+  
+  /** User's preferences and settings */
+  preferences: UserPreferences;
+  
+  /** When the user was created */
+  createdAt: Date;
+  
+  /** When the user was last updated */
+  updatedAt: Date;
+}
+
+/**
+ * Generic API response wrapper
+ * @template T The type of data being returned
+ */
+interface ApiResponse<T> {
+  /** The actual data payload */
+  data: T;
+  
+  /** Human-readable message */
+  message: string;
+  
+  /** Whether the request was successful */
+  success: boolean;
+}
+```

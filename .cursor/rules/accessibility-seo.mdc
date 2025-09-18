@@ -1,0 +1,540 @@
+---
+globs: *.tsx,*.ts
+description: Accessibility and SEO best practices for inclusive and discoverable web applications
+---
+
+# Accessibility & SEO Best Practices
+
+## Accessibility (WCAG 2.1 AA Compliance)
+
+### 1. Semantic HTML Structure
+- Use proper heading hierarchy (H1 → H2 → H3)
+- Implement semantic landmarks (header, main, nav, aside, footer)
+- Use list elements for navigation and content lists
+- Choose appropriate HTML elements for content purpose
+
+```tsx
+// ✅ Correct - Semantic structure
+<header role="banner">
+  <nav role="navigation" aria-label="Main navigation">
+    <ul>
+      <li><a href="/about">About</a></li>
+      <li><a href="/services">Services</a></li>
+      <li><a href="/contact">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main role="main">
+  <section aria-labelledby="hero-heading">
+    <h1 id="hero-heading">Connecting You with Top Talent</h1>
+    <p>Empowering your business to thrive with the right people</p>
+  </section>
+</main>
+
+<footer role="contentinfo">
+  <p>&copy; 2025 Recruitment Company. All rights reserved.</p>
+</footer>
+
+// ❌ Incorrect - Non-semantic structure
+<div>
+  <div>
+    <div>About</div>
+    <div>Services</div>
+    <div>Contact</div>
+  </div>
+</div>
+```
+
+### 2. ARIA Labels and Roles
+- Use ARIA labels for interactive elements
+- Implement proper ARIA roles
+- Use ARIA-describedby for additional context
+- Implement ARIA-expanded for collapsible content
+
+```tsx
+// ✅ Correct - ARIA implementation
+<button
+  aria-label="Close dialog"
+  aria-expanded={isOpen}
+  aria-controls="contact-modal"
+  onClick={toggleModal}
+>
+  <CloseIcon aria-hidden="true" />
+</button>
+
+<div
+  id="contact-modal"
+  role="dialog"
+  aria-labelledby="modal-title"
+  aria-describedby="modal-description"
+  aria-modal="true"
+>
+  <h2 id="modal-title">Contact Us</h2>
+  <p id="modal-description">Fill out the form below to get in touch</p>
+</div>
+
+// Form with proper labeling
+<label htmlFor="email-input">Email Address</label>
+<input
+  id="email-input"
+  type="email"
+  aria-describedby="email-error"
+  aria-invalid={hasError}
+  required
+/>
+{hasError && (
+  <div id="email-error" role="alert" aria-live="polite">
+    Please enter a valid email address
+  </div>
+)}
+```
+
+### 3. Keyboard Navigation
+- Ensure all interactive elements are keyboard accessible
+- Implement proper tab order
+- Use focus management for modals and dropdowns
+- Provide visible focus indicators
+
+```tsx
+// ✅ Correct - Keyboard navigation
+const Modal = ({ isOpen, onClose, children }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      previousActiveElement.current = document.activeElement as HTMLElement;
+      modalRef.current?.focus();
+    } else {
+      previousActiveElement.current?.focus();
+    }
+  }, [isOpen]);
+
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      ref={modalRef}
+      role="dialog"
+      tabIndex={-1}
+      onKeyDown={handleKeyDown}
+      className="focus:outline-none"
+    >
+      {children}
+    </div>
+  );
+};
+```
+
+### 4. Color and Contrast
+- Maintain 4.5:1 contrast ratio for normal text
+- Maintain 3:1 contrast ratio for large text
+- Don't rely solely on color to convey information
+- Provide alternative indicators for color-coded information
+
+```tsx
+// ✅ Correct - Color and contrast
+<div className="bg-white text-gray-900"> {/* 21:1 contrast ratio */}
+  <h2 className="text-2xl font-bold">High Contrast Heading</h2>
+  <p className="text-base">This text has excellent contrast</p>
+</div>
+
+// Status indicators with multiple cues
+<div className="flex items-center space-x-2">
+  <div 
+    className="w-3 h-3 rounded-full bg-green-500" 
+    aria-label="Status: Active"
+  />
+  <span className="text-green-700 font-medium">Active</span>
+</div>
+
+// ❌ Incorrect - Poor contrast
+<div className="bg-gray-300 text-gray-400"> {/* 1.2:1 contrast ratio */}
+  <p>This text is hard to read</p>
+</div>
+```
+
+### 5. Screen Reader Support
+- Provide alt text for all images
+- Use aria-hidden for decorative elements
+- Implement proper form labels
+- Use aria-live regions for dynamic content
+
+```tsx
+// ✅ Correct - Screen reader support
+<img
+  src="/team-photo.jpg"
+  alt="Our recruitment team of 5 professionals in a modern office setting"
+  width={400}
+  height={300}
+/>
+
+// Decorative icon
+<SearchIcon aria-hidden="true" className="w-5 h-5" />
+
+// Dynamic content updates
+<div aria-live="polite" aria-atomic="true">
+  {isLoading && <span className="sr-only">Loading search results</span>}
+  {results.length > 0 && (
+    <span className="sr-only">
+      {results.length} search results found
+    </span>
+  )}
+</div>
+
+// Form with proper labels
+<fieldset>
+  <legend>Contact Information</legend>
+  <div>
+    <label htmlFor="name">Full Name *</label>
+    <input
+      id="name"
+      type="text"
+      required
+      aria-describedby="name-help"
+    />
+    <div id="name-help" className="text-sm text-gray-600">
+      Enter your first and last name
+    </div>
+  </div>
+</fieldset>
+```
+
+## SEO Best Practices
+
+### 1. Meta Tags and Metadata
+- Use Next.js Metadata API for dynamic meta tags
+- Implement Open Graph tags for social sharing
+- Add Twitter Card meta tags
+- Use structured data (JSON-LD)
+
+```tsx
+// ✅ Correct - SEO metadata
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Executive Search Services | Professional Recruitment Agency',
+  description: 'Find top executive talent with our specialized recruitment services. We connect businesses with qualified leaders across all industries.',
+  keywords: ['executive search', 'recruitment', 'talent acquisition', 'leadership hiring'],
+  authors: [{ name: 'Recruitment Company' }],
+  openGraph: {
+    title: 'Executive Search Services | Professional Recruitment Agency',
+    description: 'Find top executive talent with our specialized recruitment services.',
+    url: 'https://recruitment-company.com/services/executive-search',
+    siteName: 'Recruitment Company',
+    images: [
+      {
+        url: '/og-image-executive-search.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Executive Search Services',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Executive Search Services | Professional Recruitment Agency',
+    description: 'Find top executive talent with our specialized recruitment services.',
+    images: ['/twitter-card-executive-search.jpg'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+};
+```
+
+### 2. Structured Data (JSON-LD)
+- Implement organization schema
+- Add service schemas
+- Use job posting schemas
+- Add breadcrumb schema
+
+```tsx
+// ✅ Correct - Structured data
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Recruitment Company',
+  url: 'https://recruitment-company.com',
+  logo: 'https://recruitment-company.com/logo.png',
+  description: 'Professional recruitment agency specializing in executive search and talent acquisition',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: '123 Business Street',
+    addressLocality: 'Jakarta',
+    addressRegion: 'DKI Jakarta',
+    postalCode: '12345',
+    addressCountry: 'ID',
+  },
+  contactPoint: {
+    '@type': 'ContactPoint',
+    telephone: '+62-21-1234-5678',
+    contactType: 'customer service',
+    availableLanguage: ['English', 'Indonesian'],
+  },
+  sameAs: [
+    'https://linkedin.com/company/recruitment-company',
+    'https://twitter.com/recruitment_co',
+  ],
+};
+
+const serviceSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: 'Executive Search Services',
+  description: 'Specialized recruitment services for senior-level positions',
+  provider: {
+    '@type': 'Organization',
+    name: 'Recruitment Company',
+  },
+  areaServed: 'Indonesia',
+  serviceType: 'Recruitment Services',
+  offers: {
+    '@type': 'Offer',
+    price: 'Contact for pricing',
+    priceCurrency: 'IDR',
+  },
+};
+
+// Component with structured data
+const ServicePage = () => {
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(organizationSchema),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(serviceSchema),
+        }}
+      />
+      {/* Page content */}
+    </>
+  );
+};
+```
+
+### 3. URL Structure and Routing
+- Use descriptive, keyword-rich URLs
+- Implement proper URL hierarchy
+- Use hyphens for word separation
+- Avoid unnecessary parameters
+
+```tsx
+// ✅ Correct - SEO-friendly URLs
+// /services/executive-search
+// /services/recruitment-process-outsourcing
+// /industries/technology
+// /about-us/our-team
+// /resources/hiring-guides/technical-interview-tips
+
+// Next.js routing structure
+app/
+├── page.tsx                    // Homepage
+├── about/
+│   ├── page.tsx               // /about
+│   └── our-team/
+│       └── page.tsx           // /about/our-team
+├── services/
+│   ├── page.tsx               // /services
+│   ├── executive-search/
+│   │   └── page.tsx           // /services/executive-search
+│   └── rpo/
+│       └── page.tsx           // /services/rpo
+└── resources/
+    ├── page.tsx               // /resources
+    └── hiring-guides/
+        └── page.tsx           // /resources/hiring-guides
+```
+
+### 4. Content Optimization
+- Use proper heading hierarchy
+- Implement internal linking
+- Optimize images with descriptive alt text
+- Use descriptive link text
+
+```tsx
+// ✅ Correct - Content optimization
+const ServicePage = () => {
+  return (
+    <article>
+      <header>
+        <h1>Executive Search Services</h1>
+        <p className="text-xl text-gray-600">
+          Find top executive talent with our specialized recruitment services
+        </p>
+      </header>
+      
+      <section>
+        <h2>Why Choose Our Executive Search Services?</h2>
+        <p>
+          Our <a href="/about/our-team" className="text-blue-600 hover:underline">
+            experienced recruiters
+          </a> have deep industry knowledge and extensive networks to identify 
+          and attract the best executive talent for your organization.
+        </p>
+        
+        <h3>Our Process</h3>
+        <ol>
+          <li>Requirements Analysis</li>
+          <li>Candidate Sourcing</li>
+          <li>Assessment & Interviewing</li>
+          <li>Reference Checking</li>
+          <li>Placement & Onboarding</li>
+        </ol>
+      </section>
+      
+      <section>
+        <h2>Industries We Serve</h2>
+        <p>
+          We specialize in executive search across various industries including 
+          <a href="/industries/technology" className="text-blue-600 hover:underline">
+            technology
+          </a>, 
+          <a href="/industries/finance" className="text-blue-600 hover:underline">
+            finance
+          </a>, and 
+          <a href="/industries/healthcare" className="text-blue-600 hover:underline">
+            healthcare
+          </a>.
+        </p>
+      </section>
+    </article>
+  );
+};
+```
+
+### 5. Technical SEO
+- Implement proper sitemap
+- Use robots.txt
+- Optimize Core Web Vitals
+- Implement proper canonical URLs
+
+```tsx
+// ✅ Correct - Technical SEO
+// app/sitemap.ts
+import { MetadataRoute } from 'next';
+
+export default function sitemap(): MetadataRoute.Sitemap {
+  const baseUrl = 'https://recruitment-company.com';
+  
+  return [
+    {
+      url: baseUrl,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 1,
+    },
+    {
+      url: `${baseUrl}/services`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/services/executive-search`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
+      changeFrequency: 'yearly',
+      priority: 0.5,
+    },
+  ];
+}
+
+// app/robots.ts
+import { MetadataRoute } from 'next';
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: {
+      userAgent: '*',
+      allow: '/',
+      disallow: ['/admin/', '/api/'],
+    },
+    sitemap: 'https://recruitment-company.com/sitemap.xml',
+  };
+}
+```
+
+### 6. Performance SEO
+- Optimize images and media
+- Implement lazy loading
+- Use proper caching headers
+- Minimize JavaScript and CSS
+
+```tsx
+// ✅ Correct - Performance optimization
+import Image from 'next/image';
+
+const OptimizedImage = () => {
+  return (
+    <Image
+      src="/team-photo.jpg"
+      alt="Our professional recruitment team"
+      width={800}
+      height={600}
+      priority // For above-the-fold images
+      placeholder="blur"
+      blurDataURL="data:image/jpeg;base64,..."
+      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+      className="rounded-lg shadow-lg"
+    />
+  );
+};
+
+// Lazy loading for below-the-fold content
+const LazySection = () => {
+  return (
+    <section className="lazy-load">
+      <h2>Our Services</h2>
+      <p>Content that loads when scrolled into view</p>
+    </section>
+  );
+};
+```
+
+## Testing and Validation
+
+### 1. Accessibility Testing
+- Use automated tools (axe-core, Lighthouse)
+- Test with screen readers
+- Validate keyboard navigation
+- Check color contrast ratios
+
+### 2. SEO Testing
+- Use Google Search Console
+- Validate structured data
+- Check meta tags implementation
+- Test page speed and Core Web Vitals
+
+### 3. Continuous Monitoring
+- Set up accessibility monitoring
+- Track SEO performance metrics
+- Monitor Core Web Vitals
+- Regular content audits

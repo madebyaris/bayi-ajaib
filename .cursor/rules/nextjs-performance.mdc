@@ -1,0 +1,205 @@
+---
+alwaysApply: true
+description: Next.js performance optimization rules for 10X development
+---
+
+# Next.js Performance Optimization Rules
+
+## Core Performance Principles
+
+### 1. Image Optimization
+- ALWAYS use `next/image` component instead of `<img>` tags
+- Implement proper `width`, `height`, and `alt` attributes
+- Use `priority` prop for above-the-fold images
+- Implement `placeholder="blur"` with `blurDataURL` for better UX
+- Use `sizes` prop for responsive images
+- Prefer WebP format with JPEG fallback
+
+```tsx
+// ✅ Correct
+<Image
+  src="/hero-image.jpg"
+  alt="Professional recruitment services"
+  width={800}
+  height={600}
+  priority
+  placeholder="blur"
+  blurDataURL="data:image/jpeg;base64,..."
+  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+/>
+
+// ❌ Incorrect
+<img src="/hero-image.jpg" alt="Professional recruitment services" />
+```
+
+### 2. Code Splitting & Dynamic Imports
+- Use dynamic imports for heavy components
+- Implement lazy loading for non-critical components
+- Split vendor bundles appropriately
+- Use `next/dynamic` with `ssr: false` for client-only components
+
+```tsx
+// ✅ Correct
+const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
+  loading: () => <LoadingSpinner />,
+  ssr: false
+});
+
+// ✅ Correct - Lazy load modals
+const ContactModal = dynamic(() => import('./ContactModal'), {
+  loading: () => <div>Loading...</div>
+});
+```
+
+### 3. Bundle Optimization
+- Use `next/bundle-analyzer` to monitor bundle size
+- Implement tree shaking for unused code
+- Use `next.config.js` to optimize imports
+- Prefer ES modules over CommonJS
+
+```javascript
+// next.config.js
+module.exports = {
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons']
+  },
+  webpack: (config) => {
+    config.optimization.splitChunks = {
+      chunks: 'all',
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+        },
+      },
+    };
+    return config;
+  },
+};
+```
+
+### 4. Caching Strategies
+- Use `generateStaticParams` for static pages
+- Implement ISR (Incremental Static Regeneration) for dynamic content
+- Use `revalidate` for time-based revalidation
+- Implement proper cache headers
+
+```tsx
+// ✅ Correct - Static generation with ISR
+export async function generateStaticParams() {
+  return [
+    { slug: 'executive-search' },
+    { slug: 'rpo' },
+    { slug: 'mass-hiring' }
+  ];
+}
+
+export const revalidate = 3600; // 1 hour
+```
+
+### 5. Core Web Vitals Optimization
+- Keep LCP under 2.5s
+- Keep FID under 100ms
+- Keep CLS under 0.1
+- Use `next/font` for font optimization
+- Implement proper loading states
+
+```tsx
+// ✅ Correct - Font optimization
+import { Inter } from 'next/font/google';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
+```
+
+## Performance Monitoring
+
+### 1. Web Vitals Tracking
+- Implement `next/web-vitals` for monitoring
+- Set up performance budgets
+- Monitor Core Web Vitals in production
+- Use Lighthouse CI for automated testing
+
+### 2. Bundle Analysis
+- Run `npm run analyze` regularly
+- Monitor bundle size growth
+- Identify and remove unused dependencies
+- Optimize import statements
+
+### 3. Performance Budgets
+- JavaScript: < 250KB gzipped
+- CSS: < 50KB gzipped
+- Images: < 500KB per image
+- Total page weight: < 1MB
+
+## Memory Management
+
+### 1. Component Optimization
+- Use `React.memo` for expensive components
+- Implement `useMemo` and `useCallback` appropriately
+- Avoid creating objects in render methods
+- Use `useRef` for mutable values
+
+### 2. Event Listener Cleanup
+- Always cleanup event listeners in `useEffect`
+- Use AbortController for fetch requests
+- Implement proper component unmounting
+
+```tsx
+// ✅ Correct - Proper cleanup
+useEffect(() => {
+  const controller = new AbortController();
+  
+  fetchData({ signal: controller.signal });
+  
+  return () => {
+    controller.abort();
+  };
+}, []);
+```
+
+## SEO Performance
+
+### 1. Metadata Optimization
+- Use `next/metadata` API for dynamic metadata
+- Implement structured data (JSON-LD)
+- Optimize meta descriptions (150-160 characters)
+- Use semantic HTML elements
+
+### 2. Sitemap and Robots
+- Generate dynamic sitemap
+- Implement proper robots.txt
+- Use canonical URLs
+- Implement breadcrumb navigation
+
+## Error Handling
+
+### 1. Error Boundaries
+- Implement error boundaries for component trees
+- Use `next/error` for custom error pages
+- Implement proper error logging
+- Provide fallback UI for errors
+
+### 2. Loading States
+- Implement skeleton screens
+- Use loading spinners appropriately
+- Provide progress indicators
+- Handle network errors gracefully
+
+## Testing Performance
+
+### 1. Performance Testing
+- Use Lighthouse for performance audits
+- Implement performance tests in CI/CD
+- Monitor Core Web Vitals in production
+- Use WebPageTest for detailed analysis
+
+### 2. Load Testing
+- Test with realistic data volumes
+- Simulate different network conditions
+- Test on various devices and browsers
+- Monitor memory usage patterns

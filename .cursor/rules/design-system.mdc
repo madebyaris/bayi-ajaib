@@ -1,0 +1,302 @@
+---
+globs: *.tsx,*.ts,*.css
+description: Design system rules for consistent UI/UX and 10X design
+---
+
+# Design System Rules for 10X Design
+
+## Design Tokens & Consistency
+
+### 1. Color System
+- Use semantic color names, not hex values
+- Implement dark mode support with CSS variables
+- Maintain consistent color contrast ratios (4.5:1 minimum)
+- Use Tailwind's color palette as foundation
+
+```tsx
+// ✅ Correct - Semantic color usage
+<div className="bg-primary-600 text-white hover:bg-primary-700">
+  Primary Button
+</div>
+
+// ❌ Incorrect - Hard-coded colors
+<div className="bg-blue-600 text-white hover:bg-blue-700">
+  Primary Button
+</div>
+```
+
+### 2. Typography Scale
+- Use consistent font sizes from design system
+- Implement proper line heights (1.5-1.6 for body text)
+- Use font weights semantically (400, 500, 600, 700)
+- Maintain proper text hierarchy
+
+```tsx
+// ✅ Correct - Typography scale
+<h1 className="text-4xl font-bold leading-tight">Main Heading</h1>
+<h2 className="text-2xl font-semibold leading-snug">Section Heading</h2>
+<p className="text-base font-normal leading-relaxed">Body text</p>
+
+// ❌ Incorrect - Inconsistent sizing
+<h1 className="text-3xl font-bold">Main Heading</h1>
+<h2 className="text-xl font-bold">Section Heading</h2>
+```
+
+### 3. Spacing System
+- Use 8px base unit (0.5rem) for consistent spacing
+- Implement responsive spacing with Tailwind breakpoints
+- Use semantic spacing classes
+- Maintain visual rhythm
+
+```tsx
+// ✅ Correct - Consistent spacing
+<div className="p-6 space-y-4">
+  <div className="mb-8">Content</div>
+  <div className="mt-4">More content</div>
+</div>
+
+// ❌ Incorrect - Inconsistent spacing
+<div className="p-5 space-y-3">
+  <div className="mb-6">Content</div>
+  <div className="mt-3">More content</div>
+</div>
+```
+
+## Component Design Principles
+
+### 1. Component Composition
+- Build components from smaller, reusable pieces
+- Use compound component patterns
+- Implement proper prop interfaces
+- Follow single responsibility principle
+
+```tsx
+// ✅ Correct - Composed component
+const Card = ({ children, className, ...props }) => (
+  <div className={cn("rounded-lg border bg-card p-6", className)} {...props}>
+    {children}
+  </div>
+);
+
+const CardHeader = ({ children, className }) => (
+  <div className={cn("mb-4", className)}>{children}</div>
+);
+
+const CardContent = ({ children, className }) => (
+  <div className={cn("text-sm", className)}>{children}</div>
+);
+
+// Usage
+<Card>
+  <CardHeader>
+    <h3>Card Title</h3>
+  </CardHeader>
+  <CardContent>
+    Card content goes here
+  </CardContent>
+</Card>
+```
+
+### 2. Responsive Design
+- Mobile-first approach with Tailwind breakpoints
+- Use responsive utilities consistently
+- Test on multiple screen sizes
+- Implement proper touch targets (44px minimum)
+
+```tsx
+// ✅ Correct - Mobile-first responsive
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  <div className="p-4 md:p-6 lg:p-8">Content</div>
+</div>
+
+// ❌ Incorrect - Desktop-first
+<div className="grid grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4">
+  <div className="p-8 lg:p-6 md:p-4">Content</div>
+</div>
+```
+
+### 3. Accessibility First
+- Use semantic HTML elements
+- Implement proper ARIA labels and roles
+- Ensure keyboard navigation
+- Maintain color contrast ratios
+- Add focus indicators
+
+```tsx
+// ✅ Correct - Accessible component
+<button
+  className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+  aria-label="Submit form"
+  type="submit"
+>
+  Submit
+</button>
+
+// ❌ Incorrect - Inaccessible
+<div
+  className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+  onClick={handleSubmit}
+>
+  Submit
+</div>
+```
+
+## Animation & Interaction Design
+
+### 1. Micro-interactions
+- Use subtle animations for feedback
+- Implement hover and focus states
+- Add loading animations
+- Use consistent timing functions
+
+```tsx
+// ✅ Correct - Smooth transitions
+<button className="transition-all duration-200 ease-in-out hover:scale-105 hover:shadow-lg">
+  Interactive Button
+</button>
+
+// ❌ Incorrect - Jarring animations
+<button className="transition-transform duration-1000 hover:scale-150">
+  Interactive Button
+</button>
+```
+
+### 2. Loading States
+- Implement skeleton screens for better UX
+- Use consistent loading spinners
+- Provide progress indicators
+- Handle empty states gracefully
+
+```tsx
+// ✅ Correct - Loading state
+const LoadingCard = () => (
+  <div className="animate-pulse">
+    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+  </div>
+);
+```
+
+## Form Design
+
+### 1. Input Design
+- Use consistent input styling
+- Implement proper validation states
+- Add helpful error messages
+- Use appropriate input types
+
+```tsx
+// ✅ Correct - Form input
+const Input = ({ error, ...props }) => (
+  <div className="space-y-1">
+    <input
+      className={cn(
+        "w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500",
+        error ? "border-red-500" : "border-gray-300"
+      )}
+      {...props}
+    />
+    {error && (
+      <p className="text-sm text-red-600" role="alert">
+        {error}
+      </p>
+    )}
+  </div>
+);
+```
+
+### 2. Form Validation
+- Implement real-time validation
+- Use clear error messaging
+- Provide success feedback
+- Handle form submission states
+
+## Layout & Grid System
+
+### 1. Grid Usage
+- Use CSS Grid for complex layouts
+- Implement Flexbox for component alignment
+- Use consistent gutters and margins
+- Maintain proper content hierarchy
+
+```tsx
+// ✅ Correct - Grid layout
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  {items.map(item => (
+    <Card key={item.id}>
+      <CardContent>{item.content}</CardContent>
+    </Card>
+  ))}
+</div>
+```
+
+### 2. Container Design
+- Use consistent max-widths
+- Implement proper padding
+- Center content appropriately
+- Handle overflow gracefully
+
+## Icon & Imagery
+
+### 1. Icon Usage
+- Use consistent icon library (Lucide React)
+- Implement proper icon sizes
+- Use semantic icon names
+- Ensure proper contrast
+
+```tsx
+// ✅ Correct - Icon usage
+import { Search, User, Mail } from 'lucide-react';
+
+<Search className="w-5 h-5 text-gray-500" />
+<User className="w-6 h-6 text-primary-600" />
+```
+
+### 2. Image Handling
+- Use Next.js Image component
+- Implement proper alt text
+- Use appropriate image sizes
+- Handle loading states
+
+## Dark Mode Support
+
+### 1. Theme Implementation
+- Use CSS variables for theming
+- Implement system preference detection
+- Provide theme toggle
+- Test both light and dark modes
+
+```tsx
+// ✅ Correct - Dark mode support
+<div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+  <h1 className="text-2xl font-bold">Content</h1>
+</div>
+```
+
+## Performance Considerations
+
+### 1. CSS Optimization
+- Use Tailwind's purge feature
+- Minimize custom CSS
+- Use CSS-in-JS sparingly
+- Implement critical CSS
+
+### 2. Component Optimization
+- Use React.memo for expensive components
+- Implement proper key props
+- Avoid inline object creation
+- Use useMemo and useCallback appropriately
+
+## Testing Design
+
+### 1. Visual Testing
+- Use Storybook for component testing
+- Implement visual regression testing
+- Test on multiple devices
+- Validate accessibility
+
+### 2. Design Review
+- Conduct regular design reviews
+- Use design system documentation
+- Maintain consistency across team
+- Update design tokens as needed

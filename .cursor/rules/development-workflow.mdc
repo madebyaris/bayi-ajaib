@@ -1,0 +1,535 @@
+---
+alwaysApply: true
+description: Development workflow rules for 10X productivity and code quality
+---
+
+# Development Workflow Rules
+
+## Git Workflow & Version Control
+
+### 1. Branch Naming Convention
+- Use descriptive branch names with prefixes
+- Follow the pattern: `type/description`
+- Use kebab-case for multi-word descriptions
+- Include issue numbers when applicable
+
+```bash
+# ✅ Correct branch names
+feature/user-authentication
+bugfix/login-validation-error
+hotfix/security-patch
+refactor/component-structure
+docs/api-documentation
+chore/update-dependencies
+
+# ❌ Incorrect branch names
+fix
+new-feature
+update
+test
+```
+
+### 2. Commit Message Convention
+- Use conventional commits format
+- Include type, scope, and description
+- Use imperative mood for descriptions
+- Reference issues when applicable
+
+```bash
+# ✅ Correct commit messages
+feat(auth): add user authentication with JWT tokens
+fix(ui): resolve button alignment issue in mobile view
+docs(api): update user endpoints documentation
+refactor(components): extract reusable form components
+test(auth): add unit tests for login functionality
+chore(deps): update React to version 18.2.0
+
+# ❌ Incorrect commit messages
+fix bug
+update code
+add feature
+changes
+```
+
+### 3. Pull Request Process
+- Create descriptive PR titles
+- Include detailed descriptions
+- Add screenshots for UI changes
+- Request appropriate reviewers
+- Link related issues
+
+```markdown
+## Pull Request Template
+
+### Description
+Brief description of changes made
+
+### Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation update
+
+### Changes Made
+- List specific changes
+- Include file names when relevant
+- Mention any new dependencies
+
+### Testing
+- [ ] Unit tests added/updated
+- [ ] Integration tests added/updated
+- [ ] Manual testing completed
+- [ ] Accessibility testing completed
+
+### Screenshots
+Include screenshots for UI changes
+
+### Checklist
+- [ ] Code follows project style guidelines
+- [ ] Self-review completed
+- [ ] Comments added for complex logic
+- [ ] Documentation updated
+- [ ] No console.log statements
+- [ ] No commented-out code
+```
+
+## Code Quality Standards
+
+### 1. Code Review Checklist
+- [ ] Code follows TypeScript best practices
+- [ ] Components are properly typed
+- [ ] Error handling is implemented
+- [ ] Accessibility requirements met
+- [ ] Performance considerations addressed
+- [ ] Security best practices followed
+- [ ] Code is readable and maintainable
+- [ ] Tests are included and passing
+- [ ] Documentation is updated
+
+### 2. Pre-commit Hooks
+- Run ESLint for code quality
+- Execute Prettier for formatting
+- Run TypeScript compiler
+- Execute unit tests
+- Check for security vulnerabilities
+
+```json
+// package.json
+{
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "npm run test:ci"
+    }
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write",
+      "git add"
+    ],
+    "*.{json,md}": [
+      "prettier --write",
+      "git add"
+    ]
+  }
+}
+```
+
+### 3. Code Organization
+- Group related imports together
+- Use absolute imports with path mapping
+- Organize components by feature
+- Keep utility functions separate
+- Maintain consistent file naming
+
+```tsx
+// ✅ Correct - Import organization
+// External libraries
+import React, { useState, useEffect, useCallback } from 'react';
+import { NextPage } from 'next';
+import { useRouter } from 'next/router';
+
+// Internal components
+import { Button } from '@/components/ui/Button';
+import { Modal } from '@/components/ui/Modal';
+import { UserCard } from '@/components/UserCard';
+
+// Utilities and hooks
+import { cn } from '@/lib/utils';
+import { useUser } from '@/hooks/useUser';
+import { formatDate } from '@/utils/date';
+
+// Types
+import type { User, UserRole } from '@/types/user';
+```
+
+## Development Environment
+
+### 1. Environment Setup
+- Use consistent Node.js version
+- Document all dependencies
+- Provide setup instructions
+- Use environment variables for configuration
+- Implement proper error handling
+
+```bash
+# .nvmrc
+18.17.0
+
+# .env.example
+NEXT_PUBLIC_API_URL=http://localhost:3000/api
+NEXT_PUBLIC_APP_NAME=Recruitment Company
+DATABASE_URL=postgresql://user:password@localhost:5432/recruitment_db
+NEXTAUTH_SECRET=your-secret-key
+NEXTAUTH_URL=http://localhost:3000
+```
+
+### 2. Development Scripts
+- Provide comprehensive npm scripts
+- Include development, build, and test commands
+- Add linting and formatting scripts
+- Implement database migration scripts
+
+```json
+// package.json
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --ci --coverage",
+    "test:e2e": "playwright test",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:seed": "tsx prisma/seed.ts",
+    "analyze": "cross-env ANALYZE=true next build"
+  }
+}
+```
+
+## Testing Strategy
+
+### 1. Testing Pyramid
+- Unit tests for individual functions/components
+- Integration tests for component interactions
+- End-to-end tests for critical user flows
+- Visual regression tests for UI components
+
+```tsx
+// Unit test example
+describe('formatDate utility', () => {
+  it('formats date correctly', () => {
+    const date = new Date('2023-12-25');
+    expect(formatDate(date)).toBe('December 25, 2023');
+  });
+
+  it('handles invalid date', () => {
+    expect(formatDate(null)).toBe('N/A');
+  });
+});
+
+// Integration test example
+describe('UserProfile component', () => {
+  it('displays user information correctly', () => {
+    const mockUser = { id: '1', name: 'John Doe', email: 'john@example.com' };
+    render(<UserProfile user={mockUser} />);
+    
+    expect(screen.getByText('John Doe')).toBeInTheDocument();
+    expect(screen.getByText('john@example.com')).toBeInTheDocument();
+  });
+});
+```
+
+### 2. Test Coverage
+- Maintain minimum 80% code coverage
+- Focus on critical business logic
+- Test error scenarios
+- Include accessibility tests
+
+```json
+// jest.config.js
+module.exports = {
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/**/*.stories.{ts,tsx}',
+    '!src/**/*.test.{ts,tsx}',
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+  },
+};
+```
+
+## Performance Monitoring
+
+### 1. Performance Budgets
+- Set performance budgets for key metrics
+- Monitor Core Web Vitals
+- Track bundle size growth
+- Implement performance regression testing
+
+```javascript
+// next.config.js
+module.exports = {
+  experimental: {
+    webpackBuildWorker: true,
+  },
+  webpack: (config, { dev, isServer }) => {
+    if (!dev && !isServer) {
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+            maxSize: 244000, // 244KB
+          },
+        },
+      };
+    }
+    return config;
+  },
+};
+```
+
+### 2. Monitoring Tools
+- Use Lighthouse CI for automated testing
+- Implement performance monitoring
+- Set up error tracking
+- Monitor user experience metrics
+
+```yaml
+# .github/workflows/lighthouse.yml
+name: Lighthouse CI
+on: [push, pull_request]
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build application
+        run: npm run build
+      - name: Run Lighthouse CI
+        run: npx @lhci/cli@0.12.x autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+```
+
+## Documentation Standards
+
+### 1. Code Documentation
+- Document complex functions and components
+- Use JSDoc for function documentation
+- Include usage examples
+- Document API interfaces
+
+```tsx
+/**
+ * Custom hook for managing form state and validation
+ * @param initialValues - Initial form values
+ * @param validationSchema - Validation rules for form fields
+ * @returns Form state and handlers
+ * 
+ * @example
+ * ```tsx
+ * const { values, errors, setValue, handleSubmit } = useForm(
+ *   { name: '', email: '' },
+ *   { name: (val) => val.length < 2 ? 'Name too short' : undefined }
+ * );
+ * ```
+ */
+export const useForm = <T extends Record<string, any>>(
+  initialValues: T,
+  validationSchema?: ValidationSchema<T>
+) => {
+  // Implementation
+};
+```
+
+### 2. README Documentation
+- Include project overview
+- Provide setup instructions
+- Document API endpoints
+- Include contribution guidelines
+
+```markdown
+# Recruitment Company Website
+
+## Overview
+Professional recruitment agency website built with Next.js, TypeScript, and Tailwind CSS.
+
+## Features
+- Executive search services
+- Recruitment process outsourcing
+- Mass hiring solutions
+- Employer of record services
+
+## Getting Started
+
+### Prerequisites
+- Node.js 18.17.0 or higher
+- npm or yarn package manager
+
+### Installation
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables
+4. Run database migrations: `npm run db:migrate`
+5. Start development server: `npm run dev`
+
+## Development
+
+### Available Scripts
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run test` - Run unit tests
+- `npm run lint` - Run ESLint
+- `npm run format` - Format code with Prettier
+
+### Code Style
+- Use TypeScript for type safety
+- Follow ESLint configuration
+- Use Prettier for code formatting
+- Write tests for new features
+
+## Contributing
+1. Create feature branch
+2. Make changes
+3. Add tests
+4. Submit pull request
+```
+
+## Security Best Practices
+
+### 1. Input Validation
+- Validate all user inputs
+- Sanitize data before processing
+- Use proper TypeScript types
+- Implement rate limiting
+
+```tsx
+// ✅ Correct - Input validation
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const handleSubmit = (data: FormData) => {
+  if (!validateEmail(data.email)) {
+    setError('Please enter a valid email address');
+    return;
+  }
+  
+  // Process form data
+};
+```
+
+### 2. Security Headers
+- Implement proper security headers
+- Use HTTPS in production
+- Implement CSRF protection
+- Validate file uploads
+
+```javascript
+// next.config.js
+module.exports = {
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
+          },
+        ],
+      },
+    ];
+  },
+};
+```
+
+## Deployment Process
+
+### 1. Pre-deployment Checklist
+- [ ] All tests passing
+- [ ] Code review completed
+- [ ] Performance budget met
+- [ ] Security scan passed
+- [ ] Documentation updated
+- [ ] Environment variables configured
+- [ ] Database migrations ready
+
+### 2. Deployment Pipeline
+- Use CI/CD for automated deployment
+- Implement staging environment
+- Use feature flags for gradual rollouts
+- Monitor deployment health
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm run test:ci
+      - name: Build application
+        run: npm run build
+      - name: Deploy to production
+        run: npm run deploy
+```
+
+## Continuous Improvement
+
+### 1. Regular Reviews
+- Conduct weekly code reviews
+- Analyze performance metrics
+- Review security updates
+- Update dependencies regularly
+
+### 2. Learning and Growth
+- Stay updated with latest technologies
+- Participate in code reviews
+- Share knowledge with team
+- Contribute to open source projects

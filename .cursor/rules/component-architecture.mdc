@@ -1,0 +1,738 @@
+---
+globs: *.tsx,*.ts
+description: Component architecture patterns for scalable and maintainable React applications
+---
+
+# Component Architecture Rules
+
+## Component Design Principles
+
+### 1. Single Responsibility Principle
+- Each component should have one clear purpose
+- Keep components focused and cohesive
+- Separate concerns into different components
+- Avoid god components that do too much
+
+```tsx
+// ✅ Correct - Single responsibility
+const UserCard = ({ user }: { user: User }) => {
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <UserAvatar user={user} />
+      <UserInfo user={user} />
+      <UserActions user={user} />
+    </div>
+  );
+};
+
+const UserAvatar = ({ user }: { user: User }) => {
+  return (
+    <div className="flex-shrink-0">
+      <img
+        src={user.avatar || '/default-avatar.jpg'}
+        alt={`${user.name}'s avatar`}
+        className="w-12 h-12 rounded-full"
+      />
+    </div>
+  );
+};
+
+// ❌ Incorrect - Multiple responsibilities
+const UserCard = ({ user, onEdit, onDelete, onMessage }) => {
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <img src={user.avatar} alt="Avatar" className="w-12 h-12 rounded-full" />
+      <h3>{user.name}</h3>
+      <p>{user.email}</p>
+      <button onClick={() => onEdit(user.id)}>Edit</button>
+      <button onClick={() => onDelete(user.id)}>Delete</button>
+      <button onClick={() => onMessage(user.id)}>Message</button>
+      <div className="mt-4">
+        <h4>Recent Activity</h4>
+        <ul>
+          {user.recentActivity.map(activity => (
+            <li key={activity.id}>{activity.description}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+```
+
+### 2. Composition Over Inheritance
+- Use composition patterns for reusability
+- Implement compound components
+- Use render props and children patterns
+- Avoid deep inheritance hierarchies
+
+```tsx
+// ✅ Correct - Composition pattern
+const Card = ({ children, className, ...props }) => (
+  <div className={cn("bg-white rounded-lg shadow-md", className)} {...props}>
+    {children}
+  </div>
+);
+
+const CardHeader = ({ children, className }) => (
+  <div className={cn("px-6 py-4 border-b", className)}>
+    {children}
+  </div>
+);
+
+const CardContent = ({ children, className }) => (
+  <div className={cn("px-6 py-4", className)}>
+    {children}
+  </div>
+);
+
+const CardFooter = ({ children, className }) => (
+  <div className={cn("px-6 py-4 border-t bg-gray-50", className)}>
+    {children}
+  </div>
+);
+
+// Usage
+<Card>
+  <CardHeader>
+    <h3 className="text-lg font-semibold">User Profile</h3>
+  </CardHeader>
+  <CardContent>
+    <p>User information goes here</p>
+  </CardContent>
+  <CardFooter>
+    <button className="btn-primary">Edit Profile</button>
+  </CardFooter>
+</Card>
+```
+
+### 3. Props Interface Design
+- Define clear, typed prop interfaces
+- Use optional props appropriately
+- Implement default values
+- Use discriminated unions for variants
+
+```tsx
+// ✅ Correct - Well-designed props interface
+interface ButtonProps {
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+  disabled?: boolean;
+  loading?: boolean;
+  icon?: React.ReactNode;
+  iconPosition?: 'left' | 'right';
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  className?: string;
+  type?: 'button' | 'submit' | 'reset';
+  'aria-label'?: string;
+}
+
+const Button: React.FC<ButtonProps> = ({
+  children,
+  variant = 'primary',
+  size = 'md',
+  disabled = false,
+  loading = false,
+  icon,
+  iconPosition = 'left',
+  onClick,
+  className,
+  type = 'button',
+  'aria-label': ariaLabel,
+}) => {
+  const baseClasses = "inline-flex items-center justify-center font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2";
+  
+  const variantClasses = {
+    primary: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
+    secondary: "bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500",
+    outline: "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500",
+    ghost: "text-gray-700 hover:bg-gray-100 focus:ring-gray-500",
+  };
+  
+  const sizeClasses = {
+    sm: "px-3 py-1.5 text-sm",
+    md: "px-4 py-2 text-base",
+    lg: "px-6 py-3 text-lg",
+  };
+  
+  return (
+    <button
+      type={type}
+      disabled={disabled || loading}
+      onClick={onClick}
+      aria-label={ariaLabel}
+      className={cn(
+        baseClasses,
+        variantClasses[variant],
+        sizeClasses[size],
+        (disabled || loading) && "opacity-50 cursor-not-allowed",
+        className
+      )}
+    >
+      {loading && <LoadingSpinner className="w-4 h-4 mr-2" />}
+      {!loading && icon && iconPosition === 'left' && (
+        <span className="mr-2">{icon}</span>
+      )}
+      {children}
+      {!loading && icon && iconPosition === 'right' && (
+        <span className="ml-2">{icon}</span>
+      )}
+    </button>
+  );
+};
+```
+
+## State Management Patterns
+
+### 1. Local State Management
+- Use useState for simple state
+- Use useReducer for complex state logic
+- Implement custom hooks for reusable state logic
+- Keep state as close to where it's used as possible
+
+```tsx
+// ✅ Correct - Custom hook for state management
+const useForm = <T extends Record<string, any>>(
+  initialValues: T,
+  validationSchema?: ValidationSchema<T>
+) => {
+  const [values, setValues] = useState<T>(initialValues);
+  const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({});
+  const [touched, setTouched] = useState<Partial<Record<keyof T, boolean>>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const setValue = (name: keyof T, value: any) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+  };
+
+  const setFieldTouched = (name: keyof T) => {
+    setTouched(prev => ({ ...prev, [name]: true }));
+  };
+
+  const validate = () => {
+    if (!validationSchema) return true;
+    
+    const newErrors: Partial<Record<keyof T, string>> = {};
+    let isValid = true;
+
+    Object.keys(values).forEach(key => {
+      const fieldName = key as keyof T;
+      const fieldValue = values[fieldName];
+      const fieldValidation = validationSchema[fieldName];
+      
+      if (fieldValidation) {
+        const error = fieldValidation(fieldValue);
+        if (error) {
+          newErrors[fieldName] = error;
+          isValid = false;
+        }
+      }
+    });
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = async (onSubmit: (values: T) => Promise<void>) => {
+    setIsSubmitting(true);
+    
+    if (validate()) {
+      try {
+        await onSubmit(values);
+      } catch (error) {
+        console.error('Form submission error:', error);
+      }
+    }
+    
+    setIsSubmitting(false);
+  };
+
+  return {
+    values,
+    errors,
+    touched,
+    isSubmitting,
+    setValue,
+    setFieldTouched,
+    validate,
+    handleSubmit,
+  };
+};
+```
+
+### 2. Context Pattern
+- Use Context for global state that doesn't change often
+- Implement context providers with proper typing
+- Use multiple contexts for different concerns
+- Avoid prop drilling
+
+```tsx
+// ✅ Correct - Typed context pattern
+interface UserContextType {
+  user: User | null;
+  loading: boolean;
+  error: string | null;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  logout: () => void;
+  updateProfile: (updates: Partial<User>) => Promise<void>;
+}
+
+const UserContext = createContext<UserContextType | undefined>(undefined);
+
+const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const login = async (credentials: LoginCredentials) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const userData = await authService.login(credentials);
+      setUser(userData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    authService.logout();
+  };
+
+  const updateProfile = async (updates: Partial<User>) => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const updatedUser = await userService.updateProfile(user.id, updates);
+      setUser(updatedUser);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Update failed');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const value: UserContextType = {
+    user,
+    loading,
+    error,
+    login,
+    logout,
+    updateProfile,
+  };
+
+  return (
+    <UserContext.Provider value={value}>
+      {children}
+    </UserContext.Provider>
+  );
+};
+
+// Custom hook for using context
+const useUser = () => {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error('useUser must be used within a UserProvider');
+  }
+  return context;
+};
+```
+
+## Component Patterns
+
+### 1. Higher-Order Components (HOCs)
+- Use HOCs for cross-cutting concerns
+- Implement proper TypeScript typing
+- Preserve component props
+- Use displayName for debugging
+
+```tsx
+// ✅ Correct - HOC with proper typing
+interface WithLoadingProps {
+  loading: boolean;
+}
+
+function withLoading<P extends object>(
+  Component: React.ComponentType<P>
+): React.ComponentType<P & WithLoadingProps> {
+  const WithLoadingComponent = (props: P & WithLoadingProps) => {
+    const { loading, ...restProps } = props;
+    
+    if (loading) {
+      return <LoadingSpinner />;
+    }
+    
+    return <Component {...(restProps as P)} />;
+  };
+  
+  WithLoadingComponent.displayName = `withLoading(${Component.displayName || Component.name})`;
+  
+  return WithLoadingComponent;
+}
+
+// Usage
+const UserList = ({ users }: { users: User[] }) => (
+  <div>
+    {users.map(user => <UserCard key={user.id} user={user} />)}
+  </div>
+);
+
+const UserListWithLoading = withLoading(UserList);
+```
+
+### 2. Render Props Pattern
+- Use render props for flexible component composition
+- Implement proper TypeScript generics
+- Provide clear prop interfaces
+- Use children as function pattern
+
+```tsx
+// ✅ Correct - Render props pattern
+interface DataFetcherProps<T> {
+  url: string;
+  children: (data: {
+    data: T | null;
+    loading: boolean;
+    error: string | null;
+    refetch: () => void;
+  }) => React.ReactNode;
+}
+
+function DataFetcher<T>({ url, children }: DataFetcherProps<T>) {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  }, [url]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return <>{children({ data, loading, error, refetch: fetchData })}</>;
+}
+
+// Usage
+<DataFetcher<User[]>
+  url="/api/users"
+  children={({ data, loading, error, refetch }) => (
+    <div>
+      {loading && <LoadingSpinner />}
+      {error && <ErrorMessage message={error} onRetry={refetch} />}
+      {data && <UserList users={data} />}
+    </div>
+  )}
+/>
+```
+
+### 3. Compound Components
+- Use compound components for related functionality
+- Implement proper context sharing
+- Use displayName for debugging
+- Provide flexible composition
+
+```tsx
+// ✅ Correct - Compound components
+interface TabsContextType {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}
+
+const TabsContext = createContext<TabsContextType | undefined>(undefined);
+
+const Tabs = ({ children, defaultTab }: { children: React.ReactNode; defaultTab: string }) => {
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
+  return (
+    <TabsContext.Provider value={{ activeTab, setActiveTab }}>
+      <div className="tabs">{children}</div>
+    </TabsContext.Provider>
+  );
+};
+
+const TabsList = ({ children }: { children: React.ReactNode }) => (
+  <div className="tabs-list" role="tablist">
+    {children}
+  </div>
+);
+
+const TabsTrigger = ({ value, children }: { value: string; children: React.ReactNode }) => {
+  const { activeTab, setActiveTab } = useContext(TabsContext)!;
+  const isActive = activeTab === value;
+
+  return (
+    <button
+      className={cn("tabs-trigger", isActive && "active")}
+      onClick={() => setActiveTab(value)}
+      role="tab"
+      aria-selected={isActive}
+    >
+      {children}
+    </button>
+  );
+};
+
+const TabsContent = ({ value, children }: { value: string; children: React.ReactNode }) => {
+  const { activeTab } = useContext(TabsContext)!;
+  
+  if (activeTab !== value) return null;
+  
+  return (
+    <div className="tabs-content" role="tabpanel">
+      {children}
+    </div>
+  );
+};
+
+// Usage
+<Tabs defaultTab="profile">
+  <TabsList>
+    <TabsTrigger value="profile">Profile</TabsTrigger>
+    <TabsTrigger value="settings">Settings</TabsTrigger>
+    <TabsTrigger value="billing">Billing</TabsTrigger>
+  </TabsList>
+  <TabsContent value="profile">
+    <ProfileForm />
+  </TabsContent>
+  <TabsContent value="settings">
+    <SettingsForm />
+  </TabsContent>
+  <TabsContent value="billing">
+    <BillingForm />
+  </TabsContent>
+</Tabs>
+```
+
+## Performance Optimization
+
+### 1. Memoization
+- Use React.memo for expensive components
+- Implement useMemo for expensive calculations
+- Use useCallback for stable function references
+- Avoid unnecessary re-renders
+
+```tsx
+// ✅ Correct - Memoization
+const ExpensiveComponent = React.memo(({ data, onUpdate }: {
+  data: ComplexData;
+  onUpdate: (id: string) => void;
+}) => {
+  const processedData = useMemo(() => {
+    return data.items
+      .filter(item => item.active)
+      .map(item => ({
+        ...item,
+        processedAt: new Date().toISOString(),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [data.items]);
+
+  const handleUpdate = useCallback((id: string) => {
+    onUpdate(id);
+  }, [onUpdate]);
+
+  return (
+    <div>
+      {processedData.map(item => (
+        <ItemCard
+          key={item.id}
+          item={item}
+          onUpdate={handleUpdate}
+        />
+      ))}
+    </div>
+  );
+});
+
+ExpensiveComponent.displayName = 'ExpensiveComponent';
+```
+
+### 2. Code Splitting
+- Use dynamic imports for route-based splitting
+- Implement component-level code splitting
+- Use React.lazy for lazy loading
+- Provide proper loading states
+
+```tsx
+// ✅ Correct - Code splitting
+const LazyUserProfile = React.lazy(() => import('./UserProfile'));
+const LazySettings = React.lazy(() => import('./Settings'));
+const LazyAdminPanel = React.lazy(() => import('./AdminPanel'));
+
+const App = () => {
+  const [currentView, setCurrentView] = useState('profile');
+
+  const renderView = () => {
+    switch (currentView) {
+      case 'profile':
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <LazyUserProfile />
+          </Suspense>
+        );
+      case 'settings':
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <LazySettings />
+          </Suspense>
+        );
+      case 'admin':
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <LazyAdminPanel />
+          </Suspense>
+        );
+      default:
+        return <div>View not found</div>;
+    }
+  };
+
+  return (
+    <div>
+      <Navigation onViewChange={setCurrentView} />
+      {renderView()}
+    </div>
+  );
+};
+```
+
+## Testing Patterns
+
+### 1. Component Testing
+- Test component behavior, not implementation
+- Use proper testing utilities
+- Mock external dependencies
+- Test accessibility features
+
+```tsx
+// ✅ Correct - Component testing
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { Button } from './Button';
+
+describe('Button Component', () => {
+  it('renders with correct text', () => {
+    render(<Button>Click me</Button>);
+    expect(screen.getByRole('button', { name: 'Click me' })).toBeInTheDocument();
+  });
+
+  it('calls onClick when clicked', async () => {
+    const handleClick = jest.fn();
+    const user = userEvent.setup();
+    
+    render(<Button onClick={handleClick}>Click me</Button>);
+    
+    await user.click(screen.getByRole('button'));
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('is disabled when disabled prop is true', () => {
+    render(<Button disabled>Click me</Button>);
+    expect(screen.getByRole('button')).toBeDisabled();
+  });
+
+  it('shows loading state when loading prop is true', () => {
+    render(<Button loading>Click me</Button>);
+    expect(screen.getByRole('button')).toBeDisabled();
+    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
+  });
+
+  it('has proper accessibility attributes', () => {
+    render(
+      <Button aria-label="Submit form" type="submit">
+        Submit
+      </Button>
+    );
+    
+    const button = screen.getByRole('button');
+    expect(button).toHaveAttribute('aria-label', 'Submit form');
+    expect(button).toHaveAttribute('type', 'submit');
+  });
+});
+```
+
+### 2. Hook Testing
+- Test custom hooks in isolation
+- Use renderHook utility
+- Test different scenarios and edge cases
+- Mock external dependencies
+
+```tsx
+// ✅ Correct - Hook testing
+import { renderHook, act } from '@testing-library/react';
+import { useForm } from './useForm';
+
+describe('useForm Hook', () => {
+  it('initializes with default values', () => {
+    const { result } = renderHook(() =>
+      useForm({ name: '', email: '' })
+    );
+
+    expect(result.current.values).toEqual({ name: '', email: '' });
+    expect(result.current.errors).toEqual({});
+    expect(result.current.isSubmitting).toBe(false);
+  });
+
+  it('updates values when setValue is called', () => {
+    const { result } = renderHook(() =>
+      useForm({ name: '', email: '' })
+    );
+
+    act(() => {
+      result.current.setValue('name', 'John Doe');
+    });
+
+    expect(result.current.values.name).toBe('John Doe');
+  });
+
+  it('validates form data', () => {
+    const validationSchema = {
+      name: (value: string) => value.length < 2 ? 'Name too short' : undefined,
+      email: (value: string) => !value.includes('@') ? 'Invalid email' : undefined,
+    };
+
+    const { result } = renderHook(() =>
+      useForm({ name: '', email: '' }, validationSchema)
+    );
+
+    act(() => {
+      result.current.setValue('name', 'J');
+      result.current.setValue('email', 'invalid');
+    });
+
+    const isValid = result.current.validate();
+    expect(isValid).toBe(false);
+    expect(result.current.errors.name).toBe('Name too short');
+    expect(result.current.errors.email).toBe('Invalid email');
+  });
+});
+```
